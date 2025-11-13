@@ -10,6 +10,10 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-twitch-purple: #9146ff;
+  --color-twitch-black: #000000;
+  --color-twitch-ice: #f0f0ff;
 }
 
 @media (prefers-color-scheme: dark) {
