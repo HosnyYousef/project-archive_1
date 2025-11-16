@@ -31,7 +31,6 @@ export default function AppPage() {
     }, [session, setSupabaseClient, supabase]);
 
   useEffect(() => {
-    console.log('Supabase', supabase);
     console.log('Session', session?.user.id);
     if (supabase && session?.user.id) {
       getUserData(session?.user.id).then((user) => {
