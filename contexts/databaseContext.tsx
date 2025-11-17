@@ -21,6 +21,14 @@ type DatabaseContextType = {
         interests: string[],
         userId: string
     ) => Promise<Tables<'users'> | null>;
+    getLivestreams: () => Promise<Tables<'livestreams'>[]>;
+  createLivestream: (
+    name: string,
+    categories: string[],
+    userName: string,
+    profileImageUrl: string
+  ) => Promise<Tables<'livestreams'> | null>;
+  deleteLivestream: (userName: string) => Promise<boolean>;
 };
 
 export const DatabaseContext = createContext<DatabaseContextType | null>(null)
@@ -143,6 +151,74 @@ export const DatabaseProvider = ({
         [supabase]
     );
 
+
+const getLivestreams = useCallback(async (): Promise<
+    Tables<'livestreams'>[]
+  > => {
+    if (!supabase) {
+      return [];
+    }
+    const { data, error } = await supabase.from('livestreams').select('*');
+    if (error) {
+      console.log('Error getting livestreams', error);
+      return [];
+    }
+    return data as Tables<'livestreams'>[];
+  }, [supabase]);
+
+  const createLivestream = useCallback(
+    async (
+      name: string,
+      categories: string[],
+      userName: string,
+      profileImageUrl: string
+    ): Promise<Tables<'livestreams'> | null> => {
+      if (!supabase) {
+        console.error('[createLivestream]Supabase not initialized');
+        return null;
+      }
+      const { data, error } = await supabase
+        .from('livestreams')
+        .insert({
+          name: name,
+          categories: categories,
+          user_name: userName,
+          profile_image_url: profileImageUrl,
+        })
+        .select()
+        .single();
+      if (error) {
+        console.log('Error creating livestream', error);
+        setError(error.message);
+        return null;
+      }
+      return data as Tables<'livestreams'>;
+    },
+    [supabase]
+  );
+
+  const deleteLivestream = useCallback(
+    async (userName: string): Promise<boolean> => {
+      if (!supabase) {
+        console.error('[deleteLivestream] Supabase not initialized');
+        return false;
+      }
+      const { error } = await supabase
+        .from('livestreams')
+        .delete()
+        .eq('user_name', userName);
+      if (error) {
+        console.log('Error deleting livestream', error);
+        setError(error.message);
+        return false;
+      }
+      return true;
+    },
+    [supabase]
+  );
+
+
+
     return (
         <DatabaseContext.Provider
             value={{
@@ -152,6 +228,9 @@ export const DatabaseProvider = ({
                 getUserData,
                 setUserData,
                 setUserInterests,
+                getLivestreams,
+                createLivestream,
+                deleteLivestream,
             }}
         >
             {children}
