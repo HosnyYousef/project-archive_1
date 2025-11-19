@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { createContext, useCallback, useContext, useState } from "react";
 import type { Tables } from '../database/database.types';
+import { liveStreams } from '@/database/mockData';
 
 type DatabaseContextType = {
     supabase: SupabaseClient | null;
@@ -29,6 +30,8 @@ type DatabaseContextType = {
     profileImageUrl: string
   ) => Promise<Tables<'livestreams'> | null>;
   deleteLivestream: (userName: string) => Promise<boolean>;
+  setLivestreamsMockData: () => void;
+  removeLivestreamsMockData: () => void;
 };
 
 export const DatabaseContext = createContext<DatabaseContextType | null>(null)
@@ -217,6 +220,34 @@ const getLivestreams = useCallback(async (): Promise<
     [supabase]
   );
 
+    const setLivestreamsMockData = useCallback(async () => {
+    if (!supabase) {
+      return;
+    }
+    const { data, error } = await supabase
+      .from('livestreams')
+      .insert(liveStreams);
+    if (error) {
+      console.log('Error setting mock data', error);
+    }
+    return data;
+  }, [supabase]);
+
+  const removeLivestreamsMockData = useCallback(async () => {
+    if (!supabase) {
+      return;
+    }
+    const { error } = await supabase
+      .from('livestreams')
+      .delete()
+      .in(
+        'id',
+        liveStreams.map((livestream) => livestream.id)
+      );
+    if (error) {
+      console.log('Error removing mock data', error);
+    }
+  }, [supabase]);
 
 
     return (
@@ -231,6 +262,8 @@ const getLivestreams = useCallback(async (): Promise<
                 getLivestreams,
                 createLivestream,
                 deleteLivestream,
+                setLivestreamsMockData,
+                removeLivestreamsMockData,
             }}
         >
             {children}

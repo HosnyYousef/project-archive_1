@@ -28,3 +28,7 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.hover-raise {
+  @apply hover:translate-x-2 hover:-translate-y-2 transition-transform duration-150 ease-in-out;
+}
