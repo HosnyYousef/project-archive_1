@@ -63,11 +63,9 @@ export const DatabaseProvider = ({
             userId: string,
             field: string = "user_id"
         ): Promise<Tables<"users"> | null> => {
-            console.log(
-                "Getting user data from supabase: ",
-                "for userId: ",
-                userId
-            );
+            console.log("Getting user data from supabase: ", "for userId: ", userId);
+
+
             if (!supabase) {
                 return null;
             }
@@ -77,7 +75,7 @@ export const DatabaseProvider = ({
                     .select("*")
                     // Filter case insensitive
                     .ilike(field, `%${userId}%`)
-                    .single();
+                    .single();   
 
                 console.log("User data retrieved");
                 if (error) {
