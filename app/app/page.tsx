@@ -23,6 +23,7 @@ export default function AppPage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showSelectInterests, setShowSelectInterests] = useState(false);
   const [livestreams, setLivestreams] = useState<Tables<'livestreams'>[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);  // ✅ ADDED
 
   useEffect(() => {
     async function initializeSupabase(session: SignedInSessionResource) {
@@ -60,14 +61,19 @@ export default function AppPage() {
         }
       });
     }
-  }, [supabase, session?.user.id, getUserData, getLivestreams]);
+  }, [supabase, session?.user.id, getUserData, getLivestreams, refreshTrigger]);  // ✅ ADDED refreshTrigger
+
+  // ✅ ADDED THIS FUNCTION
+  const handleInterestsSaved = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   if (showOnboarding) {
     return <Onboarding />;
   }
 
   if (showSelectInterests) {
-    return <SelectInterests />;
+    return <SelectInterests onSaved={handleInterestsSaved} />;  // ✅ ADDED onSaved
   }
 
   return (

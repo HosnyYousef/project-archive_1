@@ -54,7 +54,7 @@ export default function Dashboard() {
       if (!userData) {
         throw new Error('User data not found');
       }
-      const callId = userData.user_name.toLowerCase();
+      const callId = userData.user_name.toLowerCase().replace(/\s+/g, '-');  // ✅ "test-user"
       const token = await createToken(userId);
       const user: User = {
         id: userId,

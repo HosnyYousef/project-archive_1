@@ -4,25 +4,25 @@ import type { Tables } from '../database/database.types';
 import { liveStreams } from '@/database/mockData';
 
 type DatabaseContextType = {
-    supabase: SupabaseClient | null;
-    error: string | null;
-    setSupabaseClient: (accessToken: string) => void;
-    getUserData: (
-        userId: string,
-        field?: string
-    ) => Promise<Tables<'users'> | null>;
-    setUserData: (
-        userName: string,
-        imageUrl: string,
-        mail: string,
-        dateOfBirth: string,
-        userId: string
-    ) => Promise<Tables<'users'> | null>;
-    setUserInterests: (
-        interests: string[],
-        userId: string
-    ) => Promise<Tables<'users'> | null>;
-    getLivestreams: () => Promise<Tables<'livestreams'>[]>;
+  supabase: SupabaseClient | null;
+  error: string | null;
+  setSupabaseClient: (accessToken: string) => void;
+  getUserData: (
+    userId: string,
+    field?: string
+  ) => Promise<Tables<'users'> | null>;
+  setUserData: (
+    userName: string,
+    imageUrl: string,
+    mail: string,
+    dateOfBirth: string,
+    userId: string
+  ) => Promise<Tables<'users'> | null>;
+  setUserInterests: (
+    interests: string[],
+    userId: string
+  ) => Promise<Tables<'users'> | null>;
+  getLivestreams: () => Promise<Tables<'livestreams'>[]>;
   createLivestream: (
     name: string,
     categories: string[],
@@ -32,128 +32,132 @@ type DatabaseContextType = {
   deleteLivestream: (userName: string) => Promise<boolean>;
   setLivestreamsMockData: () => void;
   removeLivestreamsMockData: () => void;
+  followUser: (
+    currentUserId: string,
+    userToFollowId: string
+  ) => Promise<boolean>;
 };
 
 export const DatabaseContext = createContext<DatabaseContextType | null>(null)
 
 export const DatabaseProvider = ({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) => {
-    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
-    const [error, setError] = useState<string | null>(null);
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-    const setSupabaseClient = useCallback((accessToken: string): void => {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const setSupabaseClient = useCallback((accessToken: string): void => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-        if (!supabaseUrl || !supabaseAnonKey) {
-            throw new Error('Missing Supabase environment variables');
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Missing Supabase environment variables');
+    }
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      accessToken: async () => accessToken,
+    });
+
+    setSupabase(supabaseClient);
+  }, [])
+
+  const getUserData = useCallback(
+    async (
+      userId: string,
+      field: string = "user_id"
+    ): Promise<Tables<"users"> | null> => {
+      console.log("Getting user data from supabase: ", "for userId: ", userId);
+
+
+      if (!supabase) {
+        return null;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("*")
+          // Filter case insensitive
+          .eq(field, userId)     // Exact match (case-sensitive)
+          .maybeSingle();
+          
+        console.log("User data retrieved");
+        if (error) {
+          console.error('Error getting user data:', error.message);
+          setError(`Error getting user data: ${error.message}`);
+          return null;
         }
-        const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-            accessToken: async () => accessToken,
-        });
+        return data;
+      } catch (error) {
+        console.error("Error getting user data", error);
+        return null;
+      }
+    },
+    [supabase]
+  );
 
-        setSupabase(supabaseClient);
-    }, [])
-
-    const getUserData = useCallback(
-        async (
-            userId: string,
-            field: string = "user_id"
-        ): Promise<Tables<"users"> | null> => {
-            console.log("Getting user data from supabase: ", "for userId: ", userId);
-
-
-            if (!supabase) {
-                return null;
-            }
-            try {
-                const { data, error } = await supabase
-                    .from("users")
-                    .select("*")
-                    // Filter case insensitive
-                    .ilike(field, `%${userId}%`)
-                    .single();   
-
-                console.log("User data retrieved");
-                if (error) {
-                    console.error('Error getting user data:', error.message);
-                    setError(`Error getting user data: ${error.message}`);
-                    return null;
-                }
-                return data;
-            } catch (error) {
-                console.error("Error getting user data", error);
-                return null;
-            }
-        },
-        [supabase]
-    );
-
-    const setUserData = useCallback(
-        async (
-            userName: string,
-            imageUrl: string,
-            mail: string,
-            dateOfBirth: string,
-            userId: string
-        ): Promise<Tables<'users'> | null> => {
-            if (!supabase) {
-                return null;
-            }
-            const { data, error } = await supabase
-                .from('users')
-                .insert({
-                    user_name: userName,
-                    image_url: imageUrl,
-                    mail: mail,
-                    date_of_birth: dateOfBirth,
-                    user_id: userId,
-                    following: [],
-                    followers: [],
-                    interests: [],
-                })
-                .select()
-                .single();
-            if (error) {
-                console.error('Error setting user data', error);
-                setError(`Error setting user data: ${error.message}`);
-                return null;
-            }
-            return data as Tables<'users'>;
-        },
-        [supabase]
-    );
+  const setUserData = useCallback(
+    async (
+      userName: string,
+      imageUrl: string,
+      mail: string,
+      dateOfBirth: string,
+      userId: string
+    ): Promise<Tables<'users'> | null> => {
+      if (!supabase) {
+        return null;
+      }
+      const { data, error } = await supabase
+        .from('users')
+        .insert({
+          user_name: userName,
+          image_url: imageUrl,
+          mail: mail,
+          date_of_birth: dateOfBirth,
+          user_id: userId,
+          following: [],
+          followers: [],
+          interests: [],
+        })
+        .select()
+        .single();
+      if (error) {
+        console.error('Error setting user data', error);
+        setError(`Error setting user data: ${error.message}`);
+        return null;
+      }
+      return data as Tables<'users'>;
+    },
+    [supabase]
+  );
 
 
-    const setUserInterests = useCallback(
-        async (
-            interests: string[],
-            userId: string
-        ): Promise<Tables<'users'> | null> => {
-            if (!supabase) {
-                return null;
-            }
-            const { data, error } = await supabase
-                .from('users')
-                .update({ interests: interests })
-                .eq('user_id', userId)
-                .select()
-                .single();
-            if (error) {
-                console.error('Error setting user interests', error);
-                setError(`Error setting user interests: ${error.message}`);
-                return null;
-            }
-            return data as Tables<'users'>;
-        },
-        [supabase]
-    );
+  const setUserInterests = useCallback(
+    async (
+      interests: string[],
+      userId: string
+    ): Promise<Tables<'users'> | null> => {
+      if (!supabase) {
+        return null;
+      }
+      const { data, error } = await supabase
+        .from('users')
+        .update({ interests: interests })
+        .eq('user_id', userId)
+        .select()
+        .single();
+      if (error) {
+        console.error('Error setting user interests', error);
+        setError(`Error setting user interests: ${error.message}`);
+        return null;
+      }
+      return data as Tables<'users'>;
+    },
+    [supabase]
+  );
 
 
-const getLivestreams = useCallback(async (): Promise<
+  const getLivestreams = useCallback(async (): Promise<
     Tables<'livestreams'>[]
   > => {
     if (!supabase) {
@@ -218,7 +222,7 @@ const getLivestreams = useCallback(async (): Promise<
     [supabase]
   );
 
-    const setLivestreamsMockData = useCallback(async () => {
+  const setLivestreamsMockData = useCallback(async () => {
     if (!supabase) {
       return;
     }
@@ -247,32 +251,121 @@ const getLivestreams = useCallback(async (): Promise<
     }
   }, [supabase]);
 
+  const followUser = useCallback(
+    async (currentUserId: string, userToFollowId: string): Promise<boolean> => {
+      if (!supabase) {
+        console.error('[followUser] Supabase not initialized');
+        return false;
+      }
 
-    return (
-        <DatabaseContext.Provider
-            value={{
-                supabase,
-                error,
-                setSupabaseClient,
-                getUserData,
-                setUserData,
-                setUserInterests,
-                getLivestreams,
-                createLivestream,
-                deleteLivestream,
-                setLivestreamsMockData,
-                removeLivestreamsMockData,
-            }}
-        >
-            {children}
-        </DatabaseContext.Provider>
-    )
+      try {
+        const currentUser = await getUserData(currentUserId, 'user_id');
+        if (!currentUser) {
+          console.error('[followUser] Current user not found');
+          return false;
+        }
+
+        const userToFollow = await getUserData(userToFollowId, 'user_name');
+        if (!userToFollow) {
+          console.error('[followUser] User to follow not found');
+          return false;
+        }
+
+        // ✅ PARSE STRINGS TO ARRAYS
+        const currentUserFollowing = typeof currentUser.following === 'string'
+          ? JSON.parse(currentUser.following)
+          : currentUser.following;
+
+        const userToFollowFollowers = typeof userToFollow.followers === 'string'
+          ? JSON.parse(userToFollow.followers)
+          : userToFollow.followers;
+
+        // Update following lists
+        let updatedCurrentUserFollowing: string[] = [];
+        let updatedUserToFollowFollowers: string[] = [];
+
+        if (currentUserFollowing.includes(userToFollowId)) {  // ✅ Works: now it's an array
+          // Remove from the lists if already following
+          updatedCurrentUserFollowing = currentUserFollowing.filter(
+            (id: string) => id !== userToFollow.user_id
+          );
+          updatedUserToFollowFollowers = userToFollowFollowers.filter(
+            (id: string) => id !== currentUserId
+          );
+        } else {
+          // If not following, add to following list
+          updatedCurrentUserFollowing = [
+            ...currentUserFollowing,
+            userToFollowId,
+          ];
+          updatedUserToFollowFollowers = [
+            ...userToFollowFollowers,
+            currentUserId,
+          ];
+        }
+
+        const { error: currentUserError } = await supabase
+          .from('users')
+          .update({ following: updatedCurrentUserFollowing })
+          .eq('user_id', currentUserId);
+
+        if (currentUserError) {
+          console.error(
+            '[followUser] Error updating current user following',
+            currentUserError
+          );
+          return false;
+        }
+
+        const { error: userToFollowError } = await supabase
+          .from('users')
+          .update({ followers: updatedUserToFollowFollowers })
+          .eq('user_id', userToFollow.user_id);
+
+        if (userToFollowError) {
+          console.error(
+            '[followUser] Error updating user to follow followers',
+            userToFollowError
+          );
+          return false;
+        }
+
+        console.log('[followUser] Successfully followed user');
+        return true;
+      } catch (error) {
+        console.error('[followUser] Error following user', error);
+        return false;
+      }
+    },
+    [supabase, getUserData]
+  );
+
+  return (
+    <DatabaseContext.Provider
+      value={{
+        supabase,
+        error,
+        setSupabaseClient,
+        getUserData,
+        setUserData,
+        setUserInterests,
+        getLivestreams,
+        createLivestream,
+        deleteLivestream,
+        setLivestreamsMockData,
+        removeLivestreamsMockData,
+        followUser,
+      }}
+    >
+      {children}
+    </DatabaseContext.Provider>
+  )
 };
 
 export const useDatabase = () => {
-    const context = useContext(DatabaseContext);
-    if (!context) {
-        throw new Error('useDatabase must be used within a DatabaseProvider');
-    }
-    return context;
+  const context = useContext(DatabaseContext);
+  if (!context) {
+    throw new Error('useDatabase must be used within a DatabaseProvider');
+  }
+  return context;
 };
