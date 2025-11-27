@@ -97,7 +97,9 @@ export default function Dashboard() {
             userId={session.user.id}
             userName={userName}
             isStreamer={true}
+            setChatExpanded={setChatExpanded}
           />
+
         </div>
       )}
     </section>
