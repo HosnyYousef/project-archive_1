@@ -71,9 +71,8 @@ export default function StreamerView({
   return (
     <div className='flex flex-col gap-2 relative'>
       <div
-        className={`relative flex items-center justify-center max-h-[500px] overflow-hidden border-b-4 ${
-          isLive ? 'border-twitch-purple' : 'border-slate-200'
-        }`}
+        className={`relative flex items-center justify-center aspect-video max-h-[500px] overflow-hidden border-b-4 ${isLive ? 'border-twitch-purple' : 'border-slate-200'
+          }`}
       >
         <>
           {firstParticipant ? (
@@ -106,9 +105,8 @@ export default function StreamerView({
       </div>
       {!chatExpanded && setChatExpanded && (
         <button
-          className={`absolute top-4 right-4 bg-slate-100/40 p-4 rounded-full text-sm text-secondary text-black flex gap-2 ${
-            chatExpanded ? 'rotate-180' : ''
-          } transition-transform duration-150 ease-in-out`}
+          className={`absolute top-4 right-4 bg-slate-100/40 p-4 rounded-full text-sm text-secondary text-black flex gap-2 ${chatExpanded ? 'rotate-180' : ''
+            } transition-transform duration-150 ease-in-out`}
           onClick={() => setChatExpanded(!chatExpanded)}
         >
           <ArrowRight />
@@ -167,11 +165,10 @@ export default function StreamerView({
         </p>
         <div className='flex gap-2'>
           <Button
-            className={`border-2 ${
-              isCamEnabled && !isScreenShareEnabled
+            className={`border-2 ${isCamEnabled && !isScreenShareEnabled
                 ? 'border-twitch-purple'
                 : 'border-transparent'
-            }`}
+              }`}
             onClick={async () => {
               await camera.enable();
               await screenShare.disable();
@@ -181,11 +178,10 @@ export default function StreamerView({
             Camera only
           </Button>
           <Button
-            className={`border-2 ${
-              !isCamEnabled && isScreenShareEnabled
+            className={`border-2 ${!isCamEnabled && isScreenShareEnabled
                 ? 'border-twitch-purple'
                 : 'border-transparent'
-            }`}
+              }`}
             onClick={async () => {
               await screenShare.enable();
               await camera.disable();
@@ -195,11 +191,10 @@ export default function StreamerView({
             Screen only
           </Button>
           <Button
-            className={`border-2 ${
-              isCamEnabled && isScreenShareEnabled
+            className={`border-2 ${isCamEnabled && isScreenShareEnabled
                 ? 'border-twitch-purple'
                 : 'border-transparent'
-            }`}
+              }`}
             onClick={async () => {
               await camera.enable();
               await screenShare.enable();
@@ -216,11 +211,10 @@ export default function StreamerView({
         <div className='flex gap-2'>
           {deviceList.map((device, index) => (
             <Button
-              className={`border-2 ${
-                selectedDeviceInfo?.deviceId === device.deviceId
+              className={`border-2 ${selectedDeviceInfo?.deviceId === device.deviceId
                   ? 'border-twitch-purple'
                   : 'border-transparent'
-              }`}
+                }`}
               variant='secondary'
               key={`${device.deviceId}-${index}`}
               onClick={async () => {

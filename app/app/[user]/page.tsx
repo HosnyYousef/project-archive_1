@@ -5,11 +5,11 @@ import { useDatabase } from '@/contexts/databaseContext';
 import { Tables } from '@/database/database.types';
 import { useSession } from '@clerk/nextjs';
 import {
-  Call,
-  StreamCall,
-  StreamTheme,
-  StreamVideo,
-  StreamVideoClient,
+    Call,
+    StreamCall,
+    StreamTheme,
+    StreamVideo,
+    StreamVideoClient,
 } from '@stream-io/video-react-sdk';
 
 import { use, useEffect, useState } from 'react';
@@ -150,119 +150,117 @@ export default function UserPage({
 
     return (
         <div className='h-full overflow-y-scroll'>
-            <div>
-                <section className='min-h-72 max-h-[500px] w-full'>
-                    {isLoading && (
-                        <div className='h-full w-full flex items-center justify-center text-2xl'>
-                            <p>Loading...</p>
+            <section className='min-h-72 max-h-[500px] w-full'>
+                {isLoading && (
+                    <div className='h-full w-full flex items-center justify-center text-2xl'>
+                        <p>Loading...</p>
+                    </div>
+                )}
+                {!isLoading && (!call || call.state.backstage) && (
+                    <div className='flex items-center justify-center min-h-72 max-h-[500px] w-full bg-gradient-to-r from-twitch-purple via-violet-400 to-twitch-purple'>
+                        <div className='text-center text-white opacity-80'>
+                            <h1 className='text-4xl font-extrabold drop-shadow-lg'>
+                                Stream Offline
+                            </h1>
+                            <p className='mt-2 text-lg drop-shadow-md'>
+                                {streamerData?.user_name} is not currently streaming. Check
+                                back later!
+                            </p>
                         </div>
-                    )}
-                    {!isLoading && (!call || call.state.backstage) && (
-                        <div className='flex items-center justify-center min-h-72 max-h-[500px] w-full bg-gradient-to-r from-twitch-purple via-violet-400 to-twitch-purple'>
-                            <div className='text-center text-white opacity-80 mix-blend-dark-light'>
-                                <h1 className='text-4xl font-extrabold drop-shadow-lg'>
-                                    Stream Offline
-                                </h1>
-                                <p className='mt-2 text-lg drop-shadow-md'>
-                                    {streamerData?.user_name} is not currently streaming. Check
-                                    back later!
+                    </div>
+                )}
+                {!isLoading && streamClient && call && !call.state.backstage && (
+                    <StreamTheme>
+                        <StreamVideo client={streamClient}>
+                            <StreamCall call={call}>
+                                <LivestreamWatching />
+                            </StreamCall>
+                        </StreamVideo>
+                    </StreamTheme>
+                )}
+            </section>
+
+            {streamerData && (
+                <section className='space-y-4'>
+                    <div className='flex items-center justify-between p-4'>
+                        <div className='flex items-center space-x-4'>
+                            <Image
+                                src={streamerData.image_url}
+                                alt={streamerData.user_name}
+                                width={60}
+                                height={60}
+                                className='rounded-full'
+                            />
+
+                            <div>
+                                <h2 className='text-xl font-bold'>
+                                    {streamerData.user_name}
+                                </h2>
+                                <p>
+                                    {(() => {
+                                        const followers = typeof streamerData.followers === 'string'
+                                            ? JSON.parse(streamerData.followers)
+                                            : streamerData.followers;
+                                        return followers.length;
+                                    })()} followers
                                 </p>
                             </div>
                         </div>
-                    )}
-                    {!isLoading && streamClient && call && !call.state.backstage && (
-                        <StreamTheme>
-                            <StreamVideo client={streamClient}>
-                                <StreamCall call={call}>
-                                    <LivestreamWatching />
-                                </StreamCall>
-                            </StreamVideo>
-                        </StreamTheme>
-                        )}
-                </section>
 
-                {streamerData && (
-                    <section className='space-y-4'>
-                        <div className='flex items-center justify-between p-4'>
-                            <div className='flex items-center space-x-4'>
-                                <Image
-                                    src={streamerData.image_url}
-                                    alt={streamerData.user_name}
-                                    width={60}
-                                    height={60}
-                                    className='rounded-full'
-                                />
-
-                                <div>
-                                    <h2 className='text-xl font-bold'>
-                                        {streamerData.user_name}
-                                    </h2>
-                                    <p>
-                                        {(() => {
-                                            const followers = typeof streamerData.followers === 'string'
-                                                ? JSON.parse(streamerData.followers)
-                                                : streamerData.followers;
-                                            return followers.length;
-                                        })()} followers
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className='flex items-center space-x-4'>
-                                {session?.user.id !== user && (
-                                    < Button variant='primary'
-                                        onClick={handleFollow}
-                                        disabled={isFollowLoading} >
-                                        {isFollowLoading ? 'Following...' : isFollowing ? 'Unfollow' : 'Follow'
-                                        } </Button>
-                                )}
-                                <Button variant='icon'>
-                                    <EllipsisVertical />
+                        <div className='flex items-center space-x-4'>
+                            {session?.user.id !== user && (
+                                <Button
+                                    variant='primary'
+                                    onClick={handleFollow}
+                                    disabled={isFollowLoading}
+                                >
+                                    {isFollowLoading ? 'Following...' : isFollowing ? 'Unfollow' : 'Follow'}
                                 </Button>
-                            </div>
+                            )}
+                            <Button variant='icon'>
+                                <EllipsisVertical />
+                            </Button>
                         </div>
+                    </div>
 
-                        <div className='p-4 space-y-2'>
-                            <h2 className='text-2xl font-bold'>Interests</h2>
-                            <div className='flex gap-4 overflow-x-scroll'>
-                                {(() => {
-                                    // Parse interests if it's a string
-                                    const interests = typeof streamerData.interests === 'string'
-                                        ? JSON.parse(streamerData.interests)
-                                        : streamerData.interests;
-
-                                    return Array.isArray(interests) && interests.map((interest, index) => (
-                                        <InterestComponent
-                                            key={`${interest} -${index} `}
-                                            interest={interest}
-                                        />
-                                    ));
-                                })()}
-                            </div>
-                        </div>
-
-                        <div className='p-4 space-y-2'>
-                            <h2 className='text-2xl font-bold'>Following</h2>
+                    <div className='p-4 space-y-2'>
+                        <h2 className='text-2xl font-bold'>Interests</h2>
+                        <div className='flex gap-4 overflow-x-scroll'>
                             {(() => {
-                                // Parse following if it's a string
-                                const following = typeof streamerData.following === 'string'
-                                    ? JSON.parse(streamerData.following)
-                                    : streamerData.following;
+                                const interests = typeof streamerData.interests === 'string'
+                                    ? JSON.parse(streamerData.interests)
+                                    : streamerData.interests;
 
-                                if (!following || following.length === 0) {
-                                    return <p>{streamerData.user_name} is not following anyone</p>;
-                                }
-
-                                return following.map((follow: string, index: number) => (
-                                    <div key={`${follow} -${index} `}>
-                                        <p>{follow}</p>
-                                    </div>
+                                return Array.isArray(interests) && interests.map((interest, index) => (
+                                    <InterestComponent
+                                        key={`${interest}-${index}`}
+                                        interest={interest}
+                                    />
                                 ));
                             })()}
                         </div>
-                    </section>
-                )}
-            </div>
+                    </div>
+
+                    <div className='p-4 space-y-2'>
+                        <h2 className='text-2xl font-bold'>Following</h2>
+                        {(() => {
+                            const following = typeof streamerData.following === 'string'
+                                ? JSON.parse(streamerData.following)
+                                : streamerData.following;
+
+                            if (!following || following.length === 0) {
+                                return <p>{streamerData.user_name} is not following anyone</p>;
+                            }
+
+                            return following.map((follow: string, index: number) => (
+                                <div key={`${follow}-${index}`}>
+                                    <p>{follow}</p>
+                                </div>
+                            ));
+                        })()}
+                    </div>
+                </section>
+            )}
         </div>
     );
 }

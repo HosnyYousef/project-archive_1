@@ -80,7 +80,7 @@ export const DatabaseProvider = ({
           // Filter case insensitive
           .eq(field, userId)     // Exact match (case-sensitive)
           .maybeSingle();
-          
+
         console.log("User data retrieved");
         if (error) {
           console.error('Error getting user data:', error.message);
@@ -188,7 +188,7 @@ export const DatabaseProvider = ({
           name: name,
           categories: categories,
           user_name: userName,
-          profile_image_url: profileImageUrl,
+          profile_image: profileImageUrl,
         })
         .select()
         .single();
