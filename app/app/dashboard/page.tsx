@@ -1,6 +1,7 @@
 'use client';
 
 import StreamerView from '@/components/streamerView/streamerView';
+import MyChat from '@/components/myChat/myChat';
 import {
   StreamVideoClient,
   StreamVideo,
@@ -92,6 +93,11 @@ export default function Dashboard() {
       )}
       {chatExpanded && session?.user && userName && (
         <div className='w-full h-full max-h-[700px]'>
+          <MyChat
+            userId={session.user.id}
+            userName={userName}
+            isStreamer={true}
+          />
         </div>
       )}
     </section>
